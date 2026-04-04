@@ -149,6 +149,16 @@ Parametros comuns de insights:
 
 ---
 
+## Aprendizados (memória persistente)
+
+**Arquivo:** `aprendizados.md` (na raiz da skill, `~/.claude/skills/google-ads-ratos/aprendizados.md`)
+
+O Claude DEVE:
+1. **Ler `aprendizados.md` no início de QUALQUER operação de criação** (campanha, ad group, keyword, RSA)
+2. **Quando o usuário corrigir algo**, perguntar: "Quer que eu registre isso nos aprendizados?"
+3. **Quando o usuário pedir** ("lembra disso", "registra"), registrar imediatamente
+4. **Não duplicar** — verificar se já existe regra similar antes de adicionar
+
 ## Regras de seguranca
 
 O Claude DEVE seguir estas regras ao executar operacoes:
