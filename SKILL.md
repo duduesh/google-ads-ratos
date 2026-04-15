@@ -11,12 +11,14 @@ Skill completa para gestao de Google Ads via SDK oficial (`google-ads`). Executa
 
 ## Setup (primeira vez)
 
-Quando o usuario pedir para configurar, rodar setup, ou for a primeira vez usando a skill, o Claude deve guiar o setup interativo:
+Quando o usuario pedir para configurar, rodar setup, ou for a primeira vez usando a skill, o Claude deve guiar o setup interativo.
+
+**O setup tem um script automatizado** em `scripts/setup.py` que simplifica o processo:
 
 ### 1. Verificar dependencias
 
 ```bash
-pip3 install google-ads protobuf
+pip3 install google-ads google-auth-oauthlib protobuf
 ```
 
 ### 2. Verificar .env
@@ -44,9 +46,44 @@ GOOGLE_ADS_CUSTOMER_ID=""
 
 **Fallback**: Se existir `~/.claude/skills/google-ads-ratos/google-ads.yaml`, o SDK carrega dele automaticamente.
 
-### 3. Cadastro de contas (contas.yaml) — SETUP CONVERSACIONAL
+### 3. Preencher credenciais no .env
 
-Depois que o `.env` estiver preenchido, o Claude DEVE proativamente guiar o cadastro de contas:
+O usuario precisa obter e preencher no .env (tutorial completo em ratosdeia.com.br/assets/tutorial-token-google-ads/):
+
+1. **DEVELOPER_TOKEN** — Central de API no Google Ads (Ferramentas > Central de API)
+2. **CLIENT_ID e CLIENT_SECRET** — Google Cloud Console (criar projeto > ativar Google Ads API > credenciais OAuth)
+3. **LOGIN_CUSTOMER_ID** — ID do MCC (sem hifens)
+
+O **REFRESH_TOKEN** NAO precisa ser preenchido manualmente — o setup.py gera automaticamente (ver passo 4).
+
+### 4. Gerar refresh token (automatico)
+
+Depois que CLIENT_ID, CLIENT_SECRET e DEVELOPER_TOKEN estiverem no .env, rodar:
+
+```bash
+python3 ~/.claude/skills/google-ads-ratos/scripts/setup.py oauth
+```
+
+Isso abre o browser, o usuario autoriza, e o refresh token e salvo automaticamente no .env. Sem copiar/colar nada.
+
+**Ou rodar o fluxo completo de uma vez:**
+
+```bash
+python3 ~/.claude/skills/google-ads-ratos/scripts/setup.py full
+```
+
+Subcomandos do setup.py:
+
+| Subcomando | O que faz |
+|---|---|
+| `check` | Verifica dependencias e variaveis do .env |
+| `oauth` | Gera refresh token via OAuth2 (abre browser) |
+| `test` | Testa conexao listando contas acessiveis |
+| `full` | Fluxo completo: check + oauth (se necessario) + test |
+
+### 5. Cadastro de contas (contas.yaml) — SETUP CONVERSACIONAL
+
+Depois que o `.env` estiver preenchido e o teste passar, o Claude DEVE proativamente guiar o cadastro de contas:
 
 1. Rodar `read.py accounts` para listar todas as contas acessiveis
 2. Perguntar ao usuario: "Qual a tua principal conta Google Ads? Me passa o nome do cliente, e eu preencho o contas.yaml pra ti."
@@ -158,6 +195,23 @@ O Claude DEVE:
 2. **Quando o usuário corrigir algo**, perguntar: "Quer que eu registre isso nos aprendizados?"
 3. **Quando o usuário pedir** ("lembra disso", "registra"), registrar imediatamente
 4. **Não duplicar** — verificar se já existe regra similar antes de adicionar
+
+## Registro no historico (apos acoes de escrita)
+
+Depois de qualquer acao que modifica a conta (create, update, delete, pause, activate),
+o Claude DEVE perguntar:
+
+> "Quer que eu registre essa acao no historico de otimizacoes?"
+
+Se o usuario confirmar E a skill `ads-ratos` estiver instalada (`~/.claude/skills/ads-ratos/SKILL.md` existir),
+executar o fluxo do `/ads-ratos historico` com os dados da acao que acabou de ser feita:
+- Cliente, o que foi feito (com IDs), motivo, hipotese e metricas antes.
+
+Se a skill `ads-ratos` NAO estiver instalada, registrar num arquivo local
+`historico.md` na raiz do workspace com o mesmo formato.
+
+Essa regra garante que mesmo usando a google-ads-ratos diretamente (sem passar pela ads-ratos),
+o historico de otimizacoes nao se perde.
 
 ## Regras de seguranca
 
