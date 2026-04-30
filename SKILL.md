@@ -1,6 +1,6 @@
 ---
 name: google-ads-ratos
-description: Gerencia campanhas Google Ads via SDK oficial (google-ads). Le campanhas, ad groups, keywords, anuncios, search terms, quality scores e insights com GAQL. Cria, edita, pausa e deleta objetos. Use quando o usuario mencionar google ads, campanhas de search, performance max, pmax, keywords, termos de busca, quality score, google adwords, criar campanha google, pausar campanha google, orcamento google ads, RSA, responsive search ad, sitelink, callout, negativas. Tambem dispara com /google-ads-ratos setup.
+description: Gerencia campanhas Google Ads via SDK oficial (google-ads). Le campanhas, ad groups, keywords, anuncios, search terms, quality scores e insights com GAQL. Cria, edita, pausa e deleta objetos. Faz pesquisa de keywords (Keyword Planner) com volume, CPC e competicao. Use quando o usuario mencionar google ads, campanhas de search, performance max, pmax, keywords, termos de busca, quality score, google adwords, criar campanha google, pausar campanha google, orcamento google ads, RSA, responsive search ad, sitelink, callout, negativas, keyword planner, pesquisa de keywords, volume de busca, CPC estimado. Tambem dispara com /google-ads-ratos setup.
 ---
 
 # Google Ads Ratos
@@ -184,6 +184,32 @@ Parametros comuns de insights:
 | `negative` | Remove negativa | `delete.py negative --customer-id 123 --criterion-id 456 --level campaign --parent-id 789` |
 | `ad` | Remove anuncio | `delete.py ad --customer-id 123 --ad-group-id 456 --ad-id 789` |
 
+### Keyword Planner (keyword_planner.py)
+
+Descoberta de keywords novas e metricas historicas via `KeywordPlanIdeaService` (sem precisar criar campanha). Defaults pra Brasil: `location-id=2076`, `language-id=1014` (Portugues).
+
+| Subcomando | O que faz | Exemplo |
+|---|---|---|
+| `ideas` | Gera ideias de keywords a partir de seed terms e/ou URL. Retorna volume mensal, CPC top of page (low/high), competicao (LOW/MEDIUM/HIGH) e index 0-100 | `keyword_planner.py ideas --keywords "marketing digital\|automacao com ia" --limit 50` |
+| `historical-metrics` | Volume/CPC historico de uma lista de keywords (sem gerar novas). Retorna tambem volume mes-a-mes dos ultimos 12 meses | `keyword_planner.py historical-metrics --keywords "claude code\|cursor ai\|github copilot"` |
+
+Parametros comuns dos dois subcomandos:
+
+| Parametro | O que faz | Default |
+|---|---|---|
+| `--customer-id` | ID da conta (sem hifens) | `GOOGLE_ADS_CUSTOMER_ID` |
+| `--keywords` | Seeds separadas por `\|`. `ideas` aceita ate 20, `historical-metrics` ate 10000 | — |
+| `--url` | URL como seed (so `ideas`). Combinavel com `--keywords` | — |
+| `--location-id` | Geo target constant ID. Multiplos separados por virgula | `2076` (Brasil) |
+| `--language-id` | Language constant ID | `1014` (Portugues) |
+| `--network` | `GOOGLE_SEARCH` ou `GOOGLE_SEARCH_AND_PARTNERS` | `GOOGLE_SEARCH_AND_PARTNERS` |
+| `--include-adult` | Inclui keywords adultas | `false` |
+| `--limit` | Limita N resultados (so `ideas`, ordenado por volume DESC) | sem limite |
+
+Geo target constants comuns: `2076` Brasil, `1001773` Sao Paulo, `1001852` Rio de Janeiro, `2840` USA. Lista completa: https://developers.google.com/google-ads/api/data/geotargets
+
+Language constants: `1014` Portugues, `1000` Ingles, `1003` Espanhol. Lista: https://developers.google.com/google-ads/api/data/codes-formats#languages
+
 ---
 
 ## Aprendizados (memória persistente)
@@ -255,3 +281,10 @@ O Claude DEVE seguir estas regras ao executar operacoes:
 1. `insights.py campaign --date-range LAST_30_DAYS`
 2. `insights.py daily --since 2026-03-01 --until 2026-03-31`
 3. `insights.py keyword --campaign-id XXX`
+
+### Pesquisa de keywords antes de criar campanha
+
+1. `keyword_planner.py ideas --keywords "tema 1|tema 2"` — descobre keywords relacionadas com volume e CPC estimado
+2. `keyword_planner.py ideas --url https://site-do-cliente.com.br --limit 100` — gera ideias a partir da landing page
+3. `keyword_planner.py historical-metrics --keywords "lista|de|keywords|escolhidas"` — valida volume/CPC das que vai usar
+4. `create.py keyword --ad-group-id XXX --text "keyword escolhida" --match-type PHRASE` — adiciona ao ad group
