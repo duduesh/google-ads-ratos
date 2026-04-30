@@ -39,7 +39,8 @@ def cmd_campaign(args):
     # 1. Create budget
     budget_operation = client.get_type("CampaignBudgetOperation")
     budget = budget_operation.create
-    budget.name = f"Budget-{args.name}"
+    import time
+    budget.name = f"Budget-{args.name}-{int(time.time())}"
     budget.amount_micros = int(args.budget) * 10000  # budget in centavos -> micros
     budget.delivery_method = client.enums.BudgetDeliveryMethodEnum.STANDARD
 
@@ -56,6 +57,9 @@ def cmd_campaign(args):
     campaign.name = args.name
     campaign.campaign_budget = budget_resource
     campaign.status = client.enums.CampaignStatusEnum.PAUSED
+
+    # EU political advertising (required in API v23+)
+    campaign.contains_eu_political_advertising = 3  # DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING
 
     # Campaign type
     channel_type = args.type.upper()
@@ -76,7 +80,7 @@ def cmd_campaign(args):
     elif args.maximize_conversions:
         campaign.maximize_conversions.target_cpa_micros = 0
     else:
-        campaign.maximize_clicks.cpc_bid_ceiling_micros = 0
+        campaign.manual_cpc.enhanced_cpc_enabled = False
 
     response = campaign_service.mutate_campaigns(
         customer_id=customer_id, operations=[operation]

@@ -5,10 +5,33 @@ Skill de execucao para Google Ads no ecossistema Ratos. Usa o SDK oficial `googl
 ## Instalacao
 
 ```bash
-pip3 install google-ads protobuf
+pip3 install google-ads google-auth-oauthlib protobuf
 ```
 
 ## Configuracao
+
+### Opcao 1: Setup automatico (recomendado)
+
+```bash
+cd ~/.claude/skills/google-ads-ratos/scripts
+
+# Verifica o que falta
+python3 setup.py check
+
+# Preencha CLIENT_ID, CLIENT_SECRET e DEVELOPER_TOKEN no .env
+# Depois gere o refresh token automaticamente:
+python3 setup.py oauth
+
+# Teste a conexao:
+python3 setup.py test
+
+# Ou faca tudo de uma vez:
+python3 setup.py full
+```
+
+Tutorial completo de como obter as credenciais: ratosdeia.com.br/assets/tutorial-token-google-ads/
+
+### Opcao 2: Manual
 
 Crie o arquivo `~/.claude/skills/google-ads-ratos/.env` com:
 
@@ -67,7 +90,8 @@ google-ads-ratos/
 │   └── api-reference.md  # Referencia de GAQL queries uteis
 └── scripts/
     ├── lib/
-    │   └── __init__.py   # Auth, .env loader, helpers
+    │   └── __init__.py     # Auth, .env loader, helpers
+    ├── setup.py            # Setup interativo (check, oauth, test)
     ├── read.py             # Leitura
     ├── insights.py         # Metricas e breakdowns
     ├── create.py           # Criacao
